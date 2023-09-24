@@ -1,48 +1,43 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        List<Thread> threads = new ArrayList<>();
         String[] texts = new String[25];
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("aab", 30_000);
         }
         long startTs = System.currentTimeMillis();
-        Runnable logic = () -> {
+        List<Thread> threads = new ArrayList<>();
         for (String text: texts) {
+            Thread thread = new Thread(() -> {
                 int maxSize = 0;
-            for (int i = 0; i < text.length(); i++) {
-                for (int j = 0; j < text.length(); j++) {
-                    if(i >= j) {
-                        continue;
-                    }
-                    boolean bFound = false;
-                    for (int k = i; k < j; k++) {
-                        if(text.charAt(k) == 'b') {
-                            bFound = true;
-                            break;
+                for (int i = 0; i < text.length(); i++) {
+                    for (int j = 0; j < text.length(); j++) {
+                        if (i >= j) {
+                            continue;
+                        }
+                        boolean bFound = false;
+                        for (int k = i; k < j; k++) {
+                            if (text.charAt(k) == 'b') {
+                                bFound = true;
+                                break;
+                            }
+                        }
+                        if (!bFound && maxSize < j - i) {
+                            maxSize = j - i;
                         }
                     }
-                    if(!bFound && maxSize < j - i) {
-                        maxSize = j - i;
-                    }
                 }
-            }
-            System.out.println(text.substring(0,100) + " -> " + maxSize);
-            }
-        };
-        Thread thread1 = new Thread(logic);
-        Thread thread2 = new Thread(logic);
-        Thread thread3 = new Thread(logic);
-        Thread thread4 = new Thread(logic);
-        threads.add(thread1);
-        threads.add(thread2);
-        threads.add(thread3);
-        threads.add(thread4);
-        for (Thread thread : threads) {
+                System.out.println(text.substring(0, 100) + " -> " + maxSize);
+            });
+            threads.add(thread);
             thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
         }
         long endTs = System.currentTimeMillis();
         System.out.println("Time: " + (endTs - startTs) + "ms");
